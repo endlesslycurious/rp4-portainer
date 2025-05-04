@@ -1,0 +1,94 @@
+- name: Raspberry Pi 4 - Headless Docker Host Setup
+  hosts: rp4
+  become: true
+  tasks:
+    - name: Update system
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install security packages
+      apt:
+        name:
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Add Docker repository and key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: "deb [arch=arm64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker and Compose plugin
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: latest
+        update_cache: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Enable unattended upgrades
+      lineinfile:
+        path: /etc/apt/apt.conf.d/20auto-upgrades
+        regexp: '^{{ item.regexp }}'
+        line: "{{ item.line }}"
+        create: yes
+      with_items:
+        - { regexp: 'APT::Periodic::Update-Package-Lists', line: 'APT::Periodic::Update-Package-Lists "1";' }
+        - { regexp: 'APT::Periodic::Download-Upgradeable-Packages', line: 'APT::Periodic::Download-Upgradeable-Packages "1";' }
+        - { regexp: 'APT::Periodic::AutocleanInterval', line: 'APT::Periodic::AutocleanInterval "7";' }
+        - { regexp: 'APT::Periodic::Unattended-Upgrade', line: 'APT::Periodic::Unattended-Upgrade "1";' }
+
+    - name: Enable and configure UFW
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Disable SSH password login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+
+    - name: Restart SSH
+      service:
+        name: ssh
+        state: restarted
+
+    - name: Install Portainer (optional)
+      docker_container:
+        name: portainer
+        image: portainer/portainer-ce:linux-arm64
+        state: started
+        restart_policy: always
+        published_ports:
+          - "9000:9000"
+          - "8000:8000"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - portainer_data:/data
