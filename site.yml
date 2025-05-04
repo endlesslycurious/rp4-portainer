@@ -59,6 +59,15 @@
         - { regexp: 'APT::Periodic::AutocleanInterval', line: 'APT::Periodic::AutocleanInterval "7";' }
         - { regexp: 'APT::Periodic::Unattended-Upgrade', line: 'APT::Periodic::Unattended-Upgrade "1";' }
 
+    - name: Configure unattended-upgrades to apply only security updates
+      blockinfile:
+        path: /etc/apt/apt.conf.d/50unattended-upgrades
+        marker: "// {mark} ANSIBLE MANAGED SECURITY BLOCK"
+        block: |
+          Unattended-Upgrade::Origins-Pattern {
+            "origin=Debian,codename=${distro_codename},label=Debian-Security";
+          };
+
     - name: Enable and configure UFW
       ufw:
         rule: allow
