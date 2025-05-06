@@ -1,6 +1,9 @@
 # Portainer on Raspberry Pi 4
 
-This repo will setup and configure [Portainer](https://portainer.io) on a [Raspberry Pi4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/). Instructions assume your using a Mac with [HomeBrew](https://brew.sh) installed.
+This repo will setup and configure [Portainer](https://portainer.io) on a [Raspberry Pi4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/).
+- Basic security: password login disabled, [UFW](https://help.ubuntu.com/community/UFW) firewall and [Fail2Ban](https://github.com/fail2ban/fail2ban) login guard.
+- Minimal updates: security updates applied regularly.
+- Instructions assume your using a Mac with [HomeBrew](https://brew.sh) installed.
 
 ## Image Creation
 
