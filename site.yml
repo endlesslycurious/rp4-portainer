@@ -83,8 +83,10 @@
         regexp: '^#?PasswordAuthentication'
         line: 'PasswordAuthentication no'
         state: present
+      register: no_passwords
 
     - name: Restart SSH
+      when: no_passwords.changed
       ansible.builtin.service:
         name: ssh
         state: restarted
