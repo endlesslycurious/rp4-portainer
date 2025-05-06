@@ -52,6 +52,7 @@
         path: /etc/apt/apt.conf.d/20auto-upgrades
         regexp: '^{{ item.regexp }}'
         line: "{{ item.line }}"
+        mode: '644'
         create: true
       with_items:
         - { regexp: 'APT::Periodic::Update-Package-Lists', line: 'APT::Periodic::Update-Package-Lists "1";' }
