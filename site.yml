@@ -3,12 +3,12 @@
   become: true
   tasks:
     - name: Update system
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
         upgrade: dist
 
     - name: Install security packages
-      apt:
+      ansible.builtin.apt:
         name:
           - ufw
           - fail2ban
@@ -21,17 +21,17 @@
         state: present
 
     - name: Add Docker repository and key
-      apt_key:
+      ansible.builtin.apt_key:
         url: https://download.docker.com/linux/debian/gpg
         state: present
 
     - name: Add Docker apt repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb [arch=arm64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
         state: present
 
     - name: Install Docker and Compose plugin
-      apt:
+      ansible.builtin.apt:
         name:
           - docker-ce
           - docker-ce-cli
@@ -39,20 +39,20 @@
           - docker-buildx-plugin
           - docker-compose-plugin
         state: latest
-        update_cache: yes
+        update_cache: true
 
     - name: Add user to docker group
-      user:
+      ansible.builtin.user:
         name: "{{ ansible_user }}"
         groups: docker
-        append: yes
+        append: true
 
     - name: Enable unattended upgrades
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/apt/apt.conf.d/20auto-upgrades
         regexp: '^{{ item.regexp }}'
         line: "{{ item.line }}"
-        create: yes
+        create: true
       with_items:
         - { regexp: 'APT::Periodic::Update-Package-Lists', line: 'APT::Periodic::Update-Package-Lists "1";' }
         - { regexp: 'APT::Periodic::Download-Upgradeable-Packages', line: 'APT::Periodic::Download-Upgradeable-Packages "1";' }
@@ -60,7 +60,7 @@
         - { regexp: 'APT::Periodic::Unattended-Upgrade', line: 'APT::Periodic::Unattended-Upgrade "1";' }
 
     - name: Configure unattended-upgrades to apply only security updates
-      blockinfile:
+      ansible.builtin.blockinfile:
         path: /etc/apt/apt.conf.d/50unattended-upgrades
         marker: "// {mark} ANSIBLE MANAGED SECURITY BLOCK"
         block: |
@@ -69,28 +69,28 @@
           };
 
     - name: Enable and configure UFW
-      ufw:
+      community.general.ufw:
         rule: allow
         name: OpenSSH
 
     - name: Enable UFW
-      ufw:
+      community.general.ufw:
         state: enabled
 
     - name: Disable SSH password login
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#?PasswordAuthentication'
         line: 'PasswordAuthentication no'
         state: present
 
     - name: Restart SSH
-      service:
+      ansible.builtin.service:
         name: ssh
         state: restarted
 
     - name: Install Portainer (optional)
-      docker_container:
+      community.docker.docker_container:
         name: portainer
         image: portainer/portainer-ce:linux-arm64
         state: started
