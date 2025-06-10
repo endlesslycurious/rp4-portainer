@@ -104,3 +104,14 @@
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
           - portainer_data:/data
+
+
+    - name: Install utility packages
+      ansible.builtin.apt:
+        name:
+          - btop
+          - fzf
+          - ntop
+          - ripgrep
+          - teal-deer
+        state: present
